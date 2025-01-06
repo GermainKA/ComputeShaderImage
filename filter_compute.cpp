@@ -13,7 +13,8 @@ struct ComputeBuffer : public App
     int init( )
     {
 
-        std::string shaderPath = "TP/COMPUTE/gaussian_compute.glsl";
+        //std::string shaderPath = "TP/COMPUTE/gaussian_compute.glsl";
+        std::string shaderPath = "TP/COMPUTE/sobel_compute.glsl";
 
         // Load and compile the shader
         computeProgram = createComputeProgram(shaderPath);
@@ -22,7 +23,8 @@ struct ComputeBuffer : public App
             return -1;
         }
         
-        m_InputImage = read_image("TP/COMPUTE/DATA/SC.png");
+       // m_InputImage = read_image("TP/COMPUTE/DATA/SC.png");
+        m_InputImage = read_image("TP/COMPUTE/DATA/screen060.jpg");
 
 
 
@@ -34,20 +36,27 @@ struct ComputeBuffer : public App
         //source
         glGenTextures(1, &textureInput);
         glBindTexture(GL_TEXTURE_2D, textureInput);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_InputImage.data());
+        {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+        }
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width, height, 0, GL_RGBA, GL_FLOAT, m_InputImage.data());
 
         //cible
         glGenTextures(1, &textureOutput);
         glBindTexture(GL_TEXTURE_2D, textureOutput);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width, height, 0, GL_RGBA, GL_FLOAT, nullptr);
+        {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+        }
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width, height, 0, GL_RGBA, GL_FLOAT, nullptr);
 
-        //  binding point 
-        glBindImageTexture(0, textureInput, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
-        glBindImageTexture(1, textureOutput, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
         
         return 0;
     }
@@ -61,8 +70,17 @@ struct ComputeBuffer : public App
     
     int render( )
     {
+        //  binding point 
+        glBindImageTexture(0, textureInput, 0, GL_TRUE, 0, GL_READ_ONLY, GL_RGBA32F);
+        glBindImageTexture(1, textureOutput, 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA32F);
         // Activer le programme
         glUseProgram(computeProgram);
+
+        GLint location= glGetUniformLocation(computeProgram, "inputImage");
+        glUniform1i(location, 0);
+
+        location= glGetUniformLocation(computeProgram, "outputImage");
+        glUniform1i(location, 1); 
 
         // Définir le nombre de groupes de travail
         int groupX = (width + 15) / 16; // Arrondi supérieur

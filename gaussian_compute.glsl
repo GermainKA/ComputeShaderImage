@@ -1,8 +1,10 @@
 #version 430
 
+//#ifdef COMPUTE_SHADER
+
 layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
 
-// Les images d'entrée et de sortie
+
 layout(binding = 0, rgba32f) readonly uniform image2D inputImage;
 layout(binding = 1, rgba32f) writeonly uniform image2D outputImage;
 
@@ -15,7 +17,7 @@ void main() {
         float[3](2.0, 4.0, 2.0),
         float[3](1.0, 2.0, 1.0)
     );
-    float kernelSum = 16.0; // Somme des poids du kernel
+    float kernelSum = 16.0; 
 
     vec4 color = vec4(0.0);
     for (int y = -1; y <= 1; ++y) {
@@ -34,8 +36,9 @@ void main() {
 
 
     color /= kernelSum;
-    color = imageLoad(inputImage, pixelCoord);
     color.a = 1.0;
 
     imageStore(outputImage, pixelCoord, color);
 }
+
+//#endif
